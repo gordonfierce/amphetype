@@ -1,4 +1,3 @@
-
 from __future__ import with_statement, division
 
 from itertools import *
@@ -26,23 +25,28 @@ class StringListWidget(QTextEdit):
         self.connect(self, SIGNAL("textChanged()"), self.textChanged)
 
     def addList(self, lst):
-        self.append(u' '.join(lst))
+        self.append(u" ".join(lst))
 
     def getList(self):
         return unicode(self.toPlainText()).split()
 
     def addFromTyped(self):
-        words = [x[0] for x in DB.fetchall('select distinct data from statistic where type = 2 order by random()')]
+        words = [
+            x[0]
+            for x in DB.fetchall(
+                "select distinct data from statistic where type = 2 order by random()"
+            )
+        ]
         self.filterWords(words)
 
     def addFromFile(self):
         filen = QFileDialog.getOpenFileName()
-        if filen == u'':
+        if filen == u"":
             return
         try:
             with codecs.open(filen, "r", "utf_8_sig") as f:
                 words = f.read().split()
-        except Exception, e:
+        except Exception as e:
             QMessageBox.warning(self, "Couldn't Read File", str(e))
             return
         random.shuffle(words)
@@ -50,29 +54,39 @@ class StringListWidget(QTextEdit):
         self.filterWords(words)
 
     def filterWords(self, words):
-        n = Settings.get('str_extra')
-        w = Settings.get('str_what')
-        if w == 'r': # random
+        n = Settings.get("str_extra")
+        w = Settings.get("str_what")
+        if w == "r":  # random
             pass
         else:
             control = self.getList()
             if len(control) == 0:
                 return
-            if w == 'e': # encompassing
+            if w == "e":  # encompassing
                 stream = map(lambda x: (sum([x.count(c) for c in control]), x), words)
-                #print "str:", list(stream)[0:10]
-                preres = list(islice(ifilter(lambda x: x[0]>0, stream), 4*n))
-                #print "pre:", preres
+                # print "str:", list(stream)[0:10]
+                preres = list(islice(ifilter(lambda x: x[0] > 0, stream), 4 * n))
+                # print "pre:", preres
                 preres.sort(key=lambda x: x[0], reverse=True)
                 words = map(lambda x: x[1], preres)
-            else: # similar
-                words = ifilter(lambda x:
-                    0 < min([
-                            editdist.distance(x.encode('latin1', 'replace'),
-                                              y.encode('latin1', 'replace'))/max(len(y), len(x))
-                                for y in control]) < .26, words)
+            else:  # similar
+                words = ifilter(
+                    lambda x: 0
+                    < min(
+                        [
+                            editdist.distance(
+                                x.encode("latin1", "replace"),
+                                y.encode("latin1", "replace"),
+                            )
+                            / max(len(y), len(x))
+                            for y in control
+                        ]
+                    )
+                    < 0.26,
+                    words,
+                )
 
-        if Settings.get('str_clear') == 'r': # replace = clear
+        if Settings.get("str_clear") == "r":  # replace = clear
             self.clear()
 
         self.addList(islice(words, n))
@@ -91,6 +105,7 @@ class StringListWidget(QTextEdit):
             self.emit(SIGNAL("updated"))
         self.delayflag = 0
 
+
 class LessonGenerator(QWidget):
     def __init__(self, *args):
         super(LessonGenerator, self).__init__(*args)
@@ -101,41 +116,87 @@ class LessonGenerator(QWidget):
         self.sample.setAcceptRichText(False)
         self.les_name = QLineEdit()
 
-        self.setLayout(AmphBoxLayout([
-            ["Welcome to Amphetype's automatic lesson generator!"],
-            ["You can retrieve a list of words/keys/trigrams to practice from the Analysis tab, import from an external file, or even type in your own (separated by space).\n"""],
-            10,
-            ["In generating lessons, I will make", SettingsEdit("gen_copies"),
-                "copies the list below and divide them into sublists of size",
-                SettingsEdit("gen_take"), "(0 for all).", None],
-            ["I will then", SettingsCombo("gen_mix", [('c',"concatenate"), ('m',"commingle")]),
-                "corresponding sublists into atomic building blocks which are fashioned into lessons according to your lesson size preferences.",  None],
-            [
-                ([
-                    (self.strings, 1),
-                    [SettingsCombo('str_clear', [('s', "Supplement"), ('r', "Replace")]), "list with",
-                        SettingsEdit("str_extra"),
-                        SettingsCombo('str_what', [('e','encompassing'), ('s','similar'), ('r','random')]),
-                        "words from", AmphButton("a file", self.strings.addFromFile),
-                        "or", AmphButton("analysis database", self.strings.addFromTyped), None]
-                ], 1),
-                ([
-                    "Lessons (separated by empty lines):",
-                    (self.sample, 1),
-                    [None, AmphButton("Add to Sources", self.acceptLessons), "with name", self.les_name]
-                ], 1)
-            ]
-        ]))
+        self.setLayout(
+            AmphBoxLayout(
+                [
+                    ["Welcome to Amphetype's automatic lesson generator!"],
+                    [
+                        "You can retrieve a list of words/keys/trigrams to practice from the Analysis tab, import from an external file, or even type in your own (separated by space).\n"
+                        ""
+                    ],
+                    10,
+                    [
+                        "In generating lessons, I will make",
+                        SettingsEdit("gen_copies"),
+                        "copies the list below and divide them into sublists of size",
+                        SettingsEdit("gen_take"),
+                        "(0 for all).",
+                        None,
+                    ],
+                    [
+                        "I will then",
+                        SettingsCombo(
+                            "gen_mix", [("c", "concatenate"), ("m", "commingle")]
+                        ),
+                        "corresponding sublists into atomic building blocks which are fashioned into lessons according to your lesson size preferences.",
+                        None,
+                    ],
+                    [
+                        (
+                            [
+                                (self.strings, 1),
+                                [
+                                    SettingsCombo(
+                                        "str_clear",
+                                        [("s", "Supplement"), ("r", "Replace")],
+                                    ),
+                                    "list with",
+                                    SettingsEdit("str_extra"),
+                                    SettingsCombo(
+                                        "str_what",
+                                        [
+                                            ("e", "encompassing"),
+                                            ("s", "similar"),
+                                            ("r", "random"),
+                                        ],
+                                    ),
+                                    "words from",
+                                    AmphButton("a file", self.strings.addFromFile),
+                                    "or",
+                                    AmphButton(
+                                        "analysis database", self.strings.addFromTyped
+                                    ),
+                                    None,
+                                ],
+                            ],
+                            1,
+                        ),
+                        (
+                            [
+                                "Lessons (separated by empty lines):",
+                                (self.sample, 1),
+                                [
+                                    None,
+                                    AmphButton("Add to Sources", self.acceptLessons),
+                                    "with name",
+                                    self.les_name,
+                                ],
+                            ],
+                            1,
+                        ),
+                    ],
+                ]
+            )
+        )
 
         self.connect(Settings, SIGNAL("change_gen_take"), self.generatePreview)
         self.connect(Settings, SIGNAL("change_gen_copies"), self.generatePreview)
         self.connect(Settings, SIGNAL("change_gen_mix"), self.generatePreview)
         self.connect(self.strings, SIGNAL("updated"), self.generatePreview)
 
-
     def wantReview(self, words):
         sentences = self.generateLesson(words)
-        self.emit(SIGNAL("newReview"), u' '.join(sentences))
+        self.emit(SIGNAL("newReview"), u" ".join(sentences))
 
     def generatePreview(self):
         words = self.strings.getList()
@@ -145,18 +206,18 @@ class LessonGenerator(QWidget):
             self.sample.append(x + "\n\n")
 
     def generateLesson(self, words):
-        copies = Settings.get('gen_copies')
-        take = Settings.get('gen_take')
-        mix = Settings.get('gen_mix')
+        copies = Settings.get("gen_copies")
+        take = Settings.get("gen_take")
+        mix = Settings.get("gen_mix")
 
         sentences = []
         while len(words) > 0:
             sen = words[0:take] * copies
             words[0:take] = []
 
-            if mix == 'm': # mingle
+            if mix == "m":  # mingle
                 random.shuffle(sen)
-            sentences.append(u' '.join(sen))
+            sentences.append(u" ".join(sen))
         return sentences
 
     def acceptLessons(self, name=None):
@@ -164,14 +225,17 @@ class LessonGenerator(QWidget):
         if len(name.strip()) == 0:
             name = "<Lesson %s>" % time.strftime("%y-%m-%d %H:%M")
 
-        lessons = filter(None, [x.strip() for x in unicode(self.sample.toPlainText()).split("\n\n")])
+        lessons = filter(
+            None, [x.strip() for x in unicode(self.sample.toPlainText()).split("\n\n")]
+        )
 
         if len(lessons) == 0:
-            QMessageBox.information(self, "No Lessons", "Generate some lessons before you try to add them!")
+            QMessageBox.information(
+                self, "No Lessons", "Generate some lessons before you try to add them!"
+            )
             return
 
         self.emit(SIGNAL("newLessons"), name, lessons, 1)
 
     def addStrings(self, *args):
         self.strings.addList(*args)
-

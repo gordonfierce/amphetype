@@ -1,4 +1,3 @@
-
 from __future__ import with_statement, division
 
 import os
@@ -10,12 +9,13 @@ import sys
 from Config import Settings
 
 import optparse
+
 opts = optparse.OptionParser()
 opts.add_option("-d", "--database", metavar="FILE", help="use database FILE")
 v = opts.parse_args()[0]
 
 if v.database is not None:
-    Settings.set('db_name', v.database)
+    Settings.set("db_name", v.database)
 
 from Data import DB
 from Quizzer import Quizzer
@@ -29,7 +29,7 @@ from Widgets.Database import DatabaseWidget
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-QApplication.setStyle('cleanlooks')
+QApplication.setStyle("cleanlooks")
 
 
 class TyperWindow(QMainWindow):
@@ -84,6 +84,7 @@ class TyperWindow(QMainWindow):
     def sizeHint(self):
         return QSize(650, 400)
 
+
 class AboutWidget(QTextBrowser):
     def __init__(self, *args):
         html = "about.html file missing!"
@@ -94,8 +95,9 @@ class AboutWidget(QTextBrowser):
         super(AboutWidget, self).__init__(*args)
         self.setHtml(html)
         self.setOpenExternalLinks(True)
-        #self.setMargin(40)
+        # self.setMargin(40)
         self.setReadOnly(True)
+
 
 app = QApplication(sys.argv)
 
@@ -104,7 +106,5 @@ w.show()
 
 app.exec_()
 
-print "exit"
+print("exit")
 DB.commit()
-
-

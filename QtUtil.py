@@ -1,9 +1,7 @@
-
 from __future__ import with_statement, division
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
 
 
 class WWLabel(QLabel):
@@ -27,12 +25,17 @@ class AmphModel(QAbstractItemModel):
         if not parent.isValid():
             return True
         idxs = parent.internalPointer()
-        if len(idxs) +1 >= self.levels:
+        if len(idxs) + 1 >= self.levels:
             return False
         return True
 
     def index(self, row, column, parent):
-        if row < 0 or column < 0 or row >= self.rowCount(parent) or column >= self.columnCount(parent):
+        if (
+            row < 0
+            or column < 0
+            or row >= self.rowCount(parent)
+            or column >= self.columnCount(parent)
+        ):
             return QModelIndex()
         v = self.indexList(parent)
         if v not in self.idxs:
@@ -53,7 +56,7 @@ class AmphModel(QAbstractItemModel):
     def indexList(self, index):
         if not index.isValid():
             return ()
-        return index.internalPointer() + (index.row(), )
+        return index.internalPointer() + (index.row(),)
 
     def findList(self, parent):
         if not parent.isValid():
@@ -64,19 +67,20 @@ class AmphModel(QAbstractItemModel):
         tab = self.findList(parent.parent())
         row = parent.row()
         r = tab[row]
-        if len(r) <= self.cols+self.hidden:
+        if len(r) <= self.cols + self.hidden:
             r.append(self.populateData(self.indexList(parent)))
-        return r[self.cols+self.hidden]
+        return r[self.cols + self.hidden]
 
     def rowCount(self, index=QModelIndex()):
         tab = self.findList(index)
         return len(tab)
+
     def columnCount(self, index=QModelIndex()):
         return self.cols
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
-           return QVariant()
+            return QVariant()
 
         if role != Qt.DisplayRole and role != Qt.UserRole:
             return QVariant()
@@ -90,7 +94,7 @@ class AmphModel(QAbstractItemModel):
         if not (0 <= row < len(tab)) or not (0 <= col < self.cols):
             return QVariant()
 
-        data = tab[row][col+self.hidden]
+        data = tab[row][col + self.hidden]
         if data is None:
             return QVariant()
         if self.fmt[col] is None:
@@ -108,7 +112,7 @@ class AmphModel(QAbstractItemModel):
 
     def sort(self, col, order=Qt.AscendingOrder):
         reverse = order != Qt.AscendingOrder
-        self.rows.sort(key=lambda z: z[col+self.hidden], reverse=reverse)
+        self.rows.sort(key=lambda z: z[col + self.hidden], reverse=reverse)
         self.reset()
 
     def reset(self):
@@ -123,7 +127,6 @@ class AmphModel(QAbstractItemModel):
         return ([], [])
 
 
-
 class AmphTree(QTreeView):
     def __init__(self, model, *args):
         super(AmphTree, self).__init__(*args)
@@ -131,7 +134,7 @@ class AmphTree(QTreeView):
         self.setModel(model)
         self.setWordWrap(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        #self.setExpandsOnDoubleClick(False)
+        # self.setExpandsOnDoubleClick(False)
         self.header().setClickable(True)
         self.connect(self.header(), SIGNAL("sectionClicked(int)"), self.sortByColumn)
 
@@ -187,7 +190,7 @@ class AmphGridLayout(QGridLayout):
         if align == 0:
             args = pos + span
         else:
-            args = pos + span + (align, )
+            args = pos + span + (align,)
         if isinstance(x, basestring):
             if x[-1] == "\n":
                 self.addWidget(WWLabel(x[:-1]), *args)
@@ -217,11 +220,10 @@ class AmphButton(QPushButton):
         super(AmphButton, self).__init__(text, *args)
         self.connect(self, SIGNAL("clicked()"), callback)
 
+
 class AmphEdit(QLineEdit):
     def __init__(self, text, callback, validator=None):
         super(AmphEdit, self).__init__(text)
         if validator is not None:
             self.setValidator(validator(self))
         self.connect(self, SIGNAL("editingFinished()"), callback)
-
-
